@@ -1,0 +1,3 @@
+# musicmaster
+
+Music theory library
