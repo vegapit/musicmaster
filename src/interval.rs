@@ -1,8 +1,9 @@
+use std::fmt;
 use crate::Note;
 
 #[derive(Debug, Clone)]
 pub struct Interval{
-    pub value: u32
+    value: u32
 }
 
 /// Represents a musical interval
@@ -13,13 +14,14 @@ impl Interval{
         Interval{value: value}
     }
 
-    /// Creates a music interval baed on two notes
+    pub fn get_value(&self) -> u32 { self.value }
+
+    /// Creates a music interval based on two notes
     pub fn from_notes(from: &Note, to: &Note) -> Interval {
-        let diff = to.get_id() - from.get_id();
-        if  diff >= 0 {
-            Interval::new(diff as u32)
+        if  to.get_index() >= from.get_index() {
+            Interval::new(to.get_index() - from.get_index())
         } else {
-            Interval::new(12+diff as u32)
+            Interval::new(12 + to.get_index() - from.get_index())
         }
     }
 
@@ -27,7 +29,7 @@ impl Interval{
     pub fn from_name(s: &str) -> Option<Interval> {
         for u in 0..11 {
             let interval = Interval::new(u);
-            if interval.print() == s.to_string() {
+            if interval.to_string() == s.to_string() {
                 return Some( interval );
             }
         }
@@ -42,10 +44,11 @@ impl Interval{
         }
         res
     }
+}
 
-    /// Returns the name of the music interval without octave considerations
-    pub fn print(&self) -> String {
-        let mut res = match self.value % 12 {
+impl fmt::Display for Interval {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let res = match self.value % 12 {
             0 => String::from("P"),
             1 => String::from("m"),
             2 => String::from("M"),
@@ -59,7 +62,6 @@ impl Interval{
             10 => String::from("m"),
             _ => String::from("M")
         };
-
         let number = match self.value % 12 {
             0 => 1,
             1 => 2,
@@ -74,10 +76,7 @@ impl Interval{
             10 => 7,
             _ => 7
         };
-
-        res.push_str( number.to_string().as_str() );
-
-        res
+        write!(f, "{}{}", res, number)
     }
 }
 

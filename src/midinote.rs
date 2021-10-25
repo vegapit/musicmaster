@@ -1,10 +1,11 @@
 use std::cmp::Ordering;
+use std::fmt;
 use crate::{Note, NoteLetter, NoteAccidental};
 
 #[derive(Debug, Clone, Copy, Hash)]
 pub struct MIDINote{
-    pub note: Note,
-    pub octave: i32
+    note: Note,
+    octave: i32
 }
 
 /// Represents a MIDI note
@@ -33,36 +34,10 @@ impl MIDINote{
             None
         }
     }
-
-    /// Returns a MIDI note name e.g. Eb5
-    pub fn print(&self) -> String {
-        let mut res = match self.note.letter {
-            NoteLetter::C => String::from("C"),
-            NoteLetter::D => String::from("D"),
-            NoteLetter::E => String::from("E"),
-            NoteLetter::F => String::from("F"),
-            NoteLetter::G => String::from("G"),
-            NoteLetter::A => String::from("A"),
-            NoteLetter::B => String::from("B")
-        };
-
-        match self.note.accidental {
-            NoteAccidental::Flat => {
-                res.push_str("b".to_string().as_str());
-            },
-            NoteAccidental::Sharp => {
-                res.push_str("#".to_string().as_str());
-            },
-            _ => ()
-        }
-
-        res.push_str(self.octave.to_string().as_str());
-        res
-    }
     
     /// Returns the note's numerical id
-    pub fn get_id(&self) -> i32 {
-        let mut res : i32 = match self.note.letter {
+    pub fn get_index(&self) -> u32 {
+        let mut res : u32 = match self.note.get_letter() {
             NoteLetter::C => 0,
             NoteLetter::D => 2,
             NoteLetter::E => 4,
@@ -72,82 +47,52 @@ impl MIDINote{
             NoteLetter::B => 11
         };
 
-        res = match self.note.accidental {
+        res = match self.note.get_accidental() {
             NoteAccidental::Flat => res - 1,
             NoteAccidental::Sharp => res + 1,
             _ => res
         };
 
-        res += 12 * (self.octave as i32 + 1); 
+        res += 12 * (self.octave as u32 + 1); 
         
         res
     }
 
     /// Returns the note's MIDI representation 
     pub fn get_midi_number(&self) -> Option<u32> {
-        let id = self.get_id();
-        if id < 128 && id >= 0 {
-            Some( id as u32 )
+        let idx = self.get_index();
+        if idx < 128 {
+            Some( idx as u32 )
         } else {
             None
         }
     }
 
     /// Returns the note's enharmonic equivalent
-    pub fn equivalent(&self) -> Option<MIDINote> {
-        match self.note.accidental{
-            NoteAccidental::Natural => {
-                match self.note.letter{
-                    NoteLetter::B => Some( MIDINote::new(NoteLetter::C, NoteAccidental::Flat, self.octave) ),
-                    NoteLetter::C => Some( MIDINote::new(NoteLetter::B, NoteAccidental::Sharp, self.octave) ),
-                    NoteLetter::E => Some( MIDINote::new(NoteLetter::F, NoteAccidental::Flat, self.octave) ),
-                    NoteLetter::F => Some( MIDINote::new(NoteLetter::E, NoteAccidental::Sharp, self.octave) ),
-                    _=> None
-                }
-            },
-            NoteAccidental::Sharp => {
-                match self.note.letter{
-                    NoteLetter::A => Some( MIDINote::new(NoteLetter::B, NoteAccidental::Flat, self.octave) ),
-                    NoteLetter::B => Some( MIDINote::new(NoteLetter::C, NoteAccidental::Natural, self.octave) ),
-                    NoteLetter::C => Some( MIDINote::new(NoteLetter::D, NoteAccidental::Flat, self.octave) ),
-                    NoteLetter::D => Some( MIDINote::new(NoteLetter::E, NoteAccidental::Flat, self.octave) ),
-                    NoteLetter::E => Some( MIDINote::new(NoteLetter::F, NoteAccidental::Natural, self.octave) ),
-                    NoteLetter::F => Some( MIDINote::new(NoteLetter::G, NoteAccidental::Flat, self.octave) ),
-                    NoteLetter::G => Some( MIDINote::new(NoteLetter::A, NoteAccidental::Flat, self.octave) )
-                }
-            },
-            NoteAccidental::Flat => {
-                match self.note.letter{
-                    NoteLetter::A => Some( MIDINote::new(NoteLetter::G, NoteAccidental::Sharp, self.octave) ),
-                    NoteLetter::B => Some( MIDINote::new(NoteLetter::A, NoteAccidental::Sharp, self.octave) ),
-                    NoteLetter::C => Some( MIDINote::new(NoteLetter::B, NoteAccidental::Natural, self.octave) ),
-                    NoteLetter::D => Some( MIDINote::new(NoteLetter::C, NoteAccidental::Sharp, self.octave) ),
-                    NoteLetter::E => Some( MIDINote::new(NoteLetter::D, NoteAccidental::Sharp, self.octave) ),
-                    NoteLetter::F => Some( MIDINote::new(NoteLetter::E, NoteAccidental::Natural, self.octave) ),
-                    NoteLetter::G => Some( MIDINote::new(NoteLetter::F, NoteAccidental::Sharp, self.octave) )
-                }
-            }
-        }
+    pub fn equivalents(&self) -> Vec<MIDINote> {
+        self.note.equivalents().into_iter()
+            .map(|note| MIDINote::from_note(note, self.octave))
+            .collect()
     }
 
     /// Returns the note one semitone above
     pub fn next(&self) -> MIDINote {
-        match self.note.accidental {
+        match self.note.get_accidental() {
             NoteAccidental::Natural => {
-                match self.note.letter{
+                match self.note.get_letter() {
                     NoteLetter::B  => MIDINote::new(NoteLetter::C, NoteAccidental::Natural, self.octave + 1),
                     NoteLetter::E  => MIDINote::new(NoteLetter::F, NoteAccidental::Natural, self.octave),
-                    _ =>  MIDINote::new(self.note.letter, NoteAccidental::Sharp, self.octave)
+                    _ =>  MIDINote::new(self.note.get_letter(), NoteAccidental::Sharp, self.octave)
                 }
             },
             NoteAccidental::Flat => {
-                match self.note.letter {
+                match self.note.get_letter() {
                     NoteLetter::C => MIDINote::new(NoteLetter::C, NoteAccidental::Natural, self.octave + 1),
-                    _ => MIDINote::new(self.note.letter, NoteAccidental::Natural, self.octave)
+                    _ => MIDINote::new(self.note.get_letter(), NoteAccidental::Natural, self.octave)
                 }
             },
             NoteAccidental::Sharp => {
-                match self.note.letter {
+                match self.note.get_letter() {
                     NoteLetter::C => MIDINote::new(NoteLetter::D, NoteAccidental::Natural, self.octave),
                     NoteLetter::D => MIDINote::new(NoteLetter::E, NoteAccidental::Natural, self.octave),
                     NoteLetter::E => MIDINote::new(NoteLetter::F, NoteAccidental::Sharp, self.octave),
@@ -162,22 +107,22 @@ impl MIDINote{
 
     /// Returns the note one semitone below
     pub fn previous(&self) -> MIDINote {
-        match self.note.accidental {
+        match self.note.get_accidental() {
             NoteAccidental::Natural => {
-                match self.note.letter{
+                match self.note.get_letter() {
                     NoteLetter::C  => MIDINote::new(NoteLetter::B, NoteAccidental::Natural, self.octave - 1),
                     NoteLetter::F  => MIDINote::new(NoteLetter::E, NoteAccidental::Natural, self.octave),
-                    _ => MIDINote::new(self.note.letter, NoteAccidental::Flat, self.octave)
+                    _ => MIDINote::new(self.note.get_letter(), NoteAccidental::Flat, self.octave)
                 }
             },
             NoteAccidental::Sharp => {
-                match self.note.letter {
+                match self.note.get_letter() {
                     NoteLetter::B => MIDINote::new(NoteLetter::B, NoteAccidental::Natural, self.octave - 1),
-                    _ => MIDINote::new(self.note.letter, NoteAccidental::Natural, self.octave)
+                    _ => MIDINote::new(self.note.get_letter(), NoteAccidental::Natural, self.octave)
                 }
             },
             NoteAccidental::Flat => {
-                match self.note.letter {
+                match self.note.get_letter() {
                     NoteLetter::C => MIDINote::new(NoteLetter::B, NoteAccidental::Flat, self.octave),
                     NoteLetter::D => MIDINote::new(NoteLetter::C, NoteAccidental::Natural, self.octave),
                     NoteLetter::E => MIDINote::new(NoteLetter::D, NoteAccidental::Natural, self.octave),
@@ -191,21 +136,27 @@ impl MIDINote{
     }
 }
 
+impl fmt::Display for MIDINote {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", self.note.to_string(), self.octave)
+    }
+}
+
 impl Ord for MIDINote {
     fn cmp(&self, other: &MIDINote) -> Ordering {
-        self.get_id().cmp(&other.get_id())
+        self.get_index().cmp(&other.get_index())
     }
 }
 
 impl PartialOrd for MIDINote {
     fn partial_cmp(&self, other: &MIDINote) -> Option<Ordering> {
-        Some( self.get_id().cmp(&other.get_id()) )
+        Some( self.get_index().cmp(&other.get_index()) )
     }
 }
 
 impl PartialEq for MIDINote {
     fn eq(&self, other: &MIDINote) -> bool {
-        self.get_id() == other.get_id()
+        self.get_index() == other.get_index()
     }
 }
 
