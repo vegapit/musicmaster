@@ -4,9 +4,7 @@ use std::convert::TryFrom;
 use crate::Interval;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
-pub enum NoteLetter{
-    A,B,C,D,E,F,G
-}
+pub enum NoteLetter{ A,B,C,D,E,F,G }
 
 impl TryFrom<&str> for NoteLetter {
     type Error = &'static str;
@@ -28,18 +26,6 @@ pub fn all_note_letters() -> Vec<NoteLetter> {
     ["A","B","C","D","E","F","G"].iter()
         .map(|&s| NoteLetter::try_from(s).unwrap())
         .collect()
-}
-
-pub fn previous_note_letter(note_letter: &NoteLetter) -> NoteLetter {
-    match note_letter {
-        NoteLetter::A => NoteLetter::G,
-        NoteLetter::B => NoteLetter::A,
-        NoteLetter::C => NoteLetter::B,
-        NoteLetter::D => NoteLetter::C,
-        NoteLetter::E => NoteLetter::D,
-        NoteLetter::F => NoteLetter::E,
-        NoteLetter::G => NoteLetter::F
-    }
 }
 
 pub fn next_note_letter(note_letter: &NoteLetter) -> NoteLetter {
@@ -183,13 +169,11 @@ impl Note{
 
     /// Returns the note one semitone above
     pub fn next(&self) -> Note {
-        let all_other_accidentals : Vec<NoteAccidental> = all_note_accidentals().into_iter()
-            .filter(|&elt| elt != self.get_accidental() )
-            .collect();
+        let target_idx = if self.get_index() == 11 { 0 } else { self.get_index() + 1 };
         for note_letter in all_note_letters().into_iter() {
-            for accidental in all_other_accidentals.iter() {
-                let note = Note::new( note_letter.clone(), accidental.clone() );
-                if Interval::from_notes(&self, &note).get_value() % 12 == 1 { return note; }
+            for accidental in all_note_accidentals().into_iter() {
+                let note = Note::new( note_letter.clone(), accidental );
+                if note.get_index() == target_idx { return note; }
             }
         }
         self.clone()
@@ -197,15 +181,13 @@ impl Note{
 
     /// Returns the note one semitone below
     pub fn previous(&self) -> Note {
-        let all_other_accidentals : Vec<NoteAccidental> = all_note_accidentals().into_iter()
-            .filter(|&elt| elt != self.get_accidental() )
-            .collect();
-            for note_letter in all_note_letters().into_iter() {
-                for accidental in all_other_accidentals.iter() {
-                    let note = Note::new( note_letter.clone(), accidental.clone() );
-                    if Interval::from_notes(&note, &self).get_value() % 12 == 1 { return note; }
-                }
+        let target_idx = if self.get_index() == 0 { 11 } else { self.get_index() - 1 };
+        for note_letter in all_note_letters().into_iter() {
+            for accidental in all_note_accidentals().into_iter() {
+                let note = Note::new( note_letter.clone(), accidental );
+                if note.get_index() == target_idx { return note; }
             }
+        }
         self.clone()
     }
 }

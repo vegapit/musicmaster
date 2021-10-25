@@ -36,8 +36,8 @@ fn mode_triad() {
 fn mode_notes() {
     let root_note = Note::new( NoteLetter::A, NoteAccidental::Natural );
     let phrygian_mode = Mode::new( root_note, Scale::Major, 2 );
-    let notes = phrygian_mode.get_notes();
     
+    let notes = phrygian_mode.get_notes();   
     assert_eq!(notes[0].to_string(), String::from("A"));
     assert_eq!(notes[1].to_string(), String::from("Bb"));
     assert_eq!(notes[2].to_string(), String::from("C"));
