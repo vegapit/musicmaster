@@ -155,10 +155,10 @@ impl Chord{
             [3,2,3] => Some( Chord::new(root_note, ChordQuality::MinorSeventh, ChordPosition::SecondInversion) ),
             [2,3,4] => Some( Chord::new(root_note, ChordQuality::MinorSeventh, ChordPosition::ThirdInversion) ),
             // MinorMajor7
-            [3,4,4] => Some( Chord::new(root_note, ChordQuality::MinorSeventh, ChordPosition::Root) ),
-            [4,4,1] => Some( Chord::new(root_note, ChordQuality::MinorSeventh, ChordPosition::FirstInversion) ),
-            [4,1,3] => Some( Chord::new(root_note, ChordQuality::MinorSeventh, ChordPosition::SecondInversion) ),
-            [1,3,4] => Some( Chord::new(root_note, ChordQuality::MinorSeventh, ChordPosition::ThirdInversion) ),
+            [3,4,4] => Some( Chord::new(root_note, ChordQuality::MinorMajorSeventh, ChordPosition::Root) ),
+            [4,4,1] => Some( Chord::new(root_note, ChordQuality::MinorMajorSeventh, ChordPosition::FirstInversion) ),
+            [4,1,3] => Some( Chord::new(root_note, ChordQuality::MinorMajorSeventh, ChordPosition::SecondInversion) ),
+            [1,3,4] => Some( Chord::new(root_note, ChordQuality::MinorMajorSeventh, ChordPosition::ThirdInversion) ),
             // Diminshed7
             [3,3,3] => Some( Chord::new(root_note, ChordQuality::DiminishedSeventh, ChordPosition::Root) ),
             // Augmented7
@@ -191,6 +191,22 @@ impl Chord{
             [5,2,3] => Some( Chord::new(root_note, ChordQuality::SuspendedTwoSuspendedFour, ChordPosition::ThirdInversion) ),
             _ => None
         }
+    }
+    
+    /// Find Chord corresponding to vector of Note
+    pub fn identify(notes: &Vec<Note>) -> Vec<Chord> {
+        let intervals : Vec<Interval> = notes.as_slice()
+            .windows(2)
+            .map(|w| Interval::from_notes(&w[0], &w[1]) )
+            .collect();
+        let mut res : Vec<Chord> = Vec::new();
+        for note in notes.iter() {
+            let chord = Chord::from_intervals( note.clone(), &intervals ).unwrap();
+            if chord.get_notes().iter().zip( notes.iter() ).all(|elt| elt.0 == elt.1) {
+                res.push( chord );
+            }
+        }
+        res
     }
 
     pub fn get_root(&self) -> Note { self.root_note }
@@ -358,22 +374,6 @@ impl Chord{
             _ => ""
         };
         numeral.to_string()
-    }
-
-    /// Find Chord corresponding to vector of Note
-    pub fn identify(notes: &Vec<Note>) -> Vec<Chord> {
-        let intervals : Vec<Interval> = notes.as_slice()
-            .windows(2)
-            .map(|w| Interval::from_notes(&w[0], &w[1]) )
-            .collect();
-        let mut res : Vec<Chord> = Vec::new();
-        for note in notes.iter() {
-            let chord = Chord::from_intervals( note.clone(), &intervals ).unwrap();
-            if chord.get_intervals().iter().zip( intervals.iter() ).all(|elt| elt.0 == elt.1) {
-                res.push( chord );
-            }
-        }
-        res
     }
 }
 

@@ -194,16 +194,21 @@ impl Mode {
             };
 
             if !extended {
-                let triad = Chord::identify( &vec![first_note, second_note, third_note] )[0].clone();
-                res.push( triad );
+                let triads = Chord::identify( &vec![first_note, second_note, third_note] );
+                res.push( triads[0].clone() );
             } else {
                 let fourth_note = if i + 6 < notes.len() {
                     notes[i + 6].clone()
                 } else {
                     notes[i + 6 - notes.len()].clone()
                 };
-                let chord = Chord::identify( &vec![first_note, second_note, third_note, fourth_note] )[0].clone();
-                res.push( chord );
+
+                let chords = if vec![first_note, second_note, third_note].iter().find(|&&note| note == fourth_note).is_none() {
+                    Chord::identify( &vec![first_note, second_note, third_note, fourth_note] )
+                } else {
+                    Chord::identify( &vec![first_note, second_note, third_note] )
+                };
+                res.push( chords[0].clone() );
             }
         }
         res

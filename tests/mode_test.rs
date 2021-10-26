@@ -10,10 +10,10 @@ fn scale_from() {
 }
 
 #[test]
-fn mode_triad() {
+fn mode_major() {
     let root_note = Note::new( NoteLetter::A, NoteAccidental::Natural);
-    let aeolian_mode = Mode::new(root_note, Scale::Major, 5);
-    let triads = aeolian_mode.get_chords(true);
+    let mode = Mode::new(root_note, Scale::Major, 5);
+    let triads = mode.get_chords(true);
 
     assert_eq!(triads[0].to_string(), String::from("Am7"));
     assert_eq!(triads[1].to_string(), String::from("Bm7(b5)"));
