@@ -137,20 +137,27 @@ impl Mode {
     pub fn get_notes(&self) -> Vec<Note> {
         let intervals = self.get_intervals(); 
         let mut res = vec![ self.root_note.clone() ];
-        let mut target_note_letter = next_note_letter( &self.root_note.get_letter() );
-        for i in 0..intervals.len()-1 {
-            let note = intervals[i].apply( &res[i] );
-            if target_note_letter == note.get_letter() {
-                res.push( note );
-                target_note_letter = next_note_letter( &note.get_letter() );
-            } else {
-                for eq_note in note.equivalents().into_iter() {
-                    if target_note_letter == eq_note.get_letter() {
-                        res.push( eq_note );
-                        target_note_letter = next_note_letter( &eq_note.get_letter() );
-                        break;
+        if intervals.len() == 7 {
+            let mut target_note_letter = next_note_letter( &self.root_note.get_letter() );
+            for i in 0..intervals.len()-1 {
+                let note = intervals[i].apply( &res[i] );
+                if target_note_letter == note.get_letter() {
+                    res.push( note );
+                    target_note_letter = next_note_letter( &note.get_letter() );
+                } else {
+                    for eq_note in note.equivalents().into_iter() {
+                        if target_note_letter == eq_note.get_letter() {
+                            res.push( eq_note );
+                            target_note_letter = next_note_letter( &eq_note.get_letter() );
+                            break;
+                        }
                     }
                 }
+            }
+        } else {
+            for i in 0..intervals.len()-1 {
+                let note = intervals[i].apply( &res[i] );
+                res.push( note );
             }
         }
         res

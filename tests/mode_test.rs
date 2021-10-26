@@ -57,6 +57,14 @@ fn mode_notes() {
 }
 
 #[test]
+fn mode_diminished() {
+    let root_note = Note::new( NoteLetter::C, NoteAccidental::Natural );
+    let diminished_mode = Mode::new( root_note, Scale::Diminished, 0 );
+
+    println!("{:?}", diminished_mode.get_notes());
+}
+
+#[test]
 fn mode_chord_contain() {
     let root_note = Note::new( NoteLetter::C, NoteAccidental::Natural );
     let phrygian_mode = Mode::new(root_note, Scale::Major, 2);

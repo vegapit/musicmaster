@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::fmt;
 use std::convert::TryFrom;
+use itertools::Itertools;
 use crate::Interval;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
@@ -37,6 +38,18 @@ pub fn next_note_letter(note_letter: &NoteLetter) -> NoteLetter {
         NoteLetter::E => NoteLetter::F,
         NoteLetter::F => NoteLetter::G,
         NoteLetter::G => NoteLetter::A
+    }
+}
+
+pub fn previous_note_letter(note_letter: &NoteLetter) -> NoteLetter {
+    match note_letter {
+        NoteLetter::A => NoteLetter::G,
+        NoteLetter::B => NoteLetter::A,
+        NoteLetter::C => NoteLetter::B,
+        NoteLetter::D => NoteLetter::C,
+        NoteLetter::E => NoteLetter::D,
+        NoteLetter::F => NoteLetter::E,
+        NoteLetter::G => NoteLetter::F
     }
 }
 
@@ -170,25 +183,39 @@ impl Note{
     /// Returns the note one semitone above
     pub fn next(&self) -> Note {
         let target_idx = if self.get_index() == 11 { 0 } else { self.get_index() + 1 };
-        for note_letter in all_note_letters().into_iter() {
-            for accidental in all_note_accidentals().into_iter() {
-                let note = Note::new( note_letter.clone(), accidental );
-                if note.get_index() == target_idx { return note; }
-            }
+        let candidates : Vec<Note> = all_note_letters().into_iter()
+            .cartesian_product( all_note_accidentals().into_iter() )
+            .map(|elt| Note::new(elt.0.clone(), elt.1.clone()) )
+            .filter(|&note| note.get_index() == target_idx )
+            .collect();
+        match candidates.iter().find(|&&note| note.get_accidental() == NoteAccidental::Natural) {
+            Some(note) => { return *note; }
+            _ => {}
         }
-        self.clone()
+        match candidates.iter().find(|&&note| note.get_accidental() == NoteAccidental::Sharp) {
+            Some(note) => { return *note; }
+            _ => {}
+        }
+        candidates[0]
     }
 
     /// Returns the note one semitone below
     pub fn previous(&self) -> Note {
         let target_idx = if self.get_index() == 0 { 11 } else { self.get_index() - 1 };
-        for note_letter in all_note_letters().into_iter() {
-            for accidental in all_note_accidentals().into_iter() {
-                let note = Note::new( note_letter.clone(), accidental );
-                if note.get_index() == target_idx { return note; }
-            }
+        let candidates : Vec<Note> = all_note_letters().into_iter()
+            .cartesian_product( all_note_accidentals().into_iter() )
+            .map(|elt| Note::new(elt.0.clone(), elt.1.clone()) )
+            .filter(|&note| note.get_index() == target_idx )
+            .collect();
+        match candidates.iter().find(|&&note| note.get_accidental() == NoteAccidental::Natural) {
+            Some(note) => { return *note; }
+            _ => {}
         }
-        self.clone()
+        match candidates.iter().find(|&&note| note.get_accidental() == NoteAccidental::Flat) {
+            Some(note) => { return *note; }
+            _ => {}
+        }
+        candidates[0]
     }
 }
 
