@@ -14,6 +14,26 @@ pub enum Scale{
     Chromatic
 }
 
+pub fn get_mode_names(scale: &Scale) -> Vec<&'static str> {
+    match scale {
+        Scale::Major => vec!["Major","Dorian","Phrygian","Lydian","Mixolydian","Aeolian","Locrian"],
+        Scale::MelodicMinor => vec!["Melodic Minor","Assyrian","Lydian Augmented","Overtone","Hindu","Half-Diminished","Altered"],
+        Scale::HarmonicMinor => vec!["Harmonic Minor","Locrian #6","Ionian #5","Ukrainian Dorian","Phrygian Dominant","Lydian #2","Super Locrian bb7"],
+        Scale::Diminished => vec!["Diminished","Dominant Diminished"],
+        Scale::WholeTone => vec!["Whole Tone"],
+        Scale::HarmonicMajor => vec!["Harmonic Major","Dorian b5","Phrygian b4","Lydian b3","Mixolydian b2","Lydian Aug #2","Locrian bb7"],
+        Scale::DoubleHarmonic => vec!["Double Harmonic","Lydian #2 #6","UltraPhrygian","Hungarian Minor","Oriental","Ionian Aug #2","Locrian bb3 bb7"],
+        Scale::Chromatic => vec!["Chromatic"]
+    }
+}
+
+pub fn can_be_optimised(scale: &Scale) -> bool {
+    match scale {
+        Scale::Major | Scale::MelodicMinor |  Scale::HarmonicMajor | Scale::HarmonicMinor | Scale::WholeTone => true,
+        _ => false
+    }
+}
+
 impl TryFrom<&str> for Scale {
     type Error = &'static str;
     fn try_from(value: &str) -> Result<Self, Self::Error> {
@@ -59,19 +79,6 @@ pub fn all_scales() -> Vec<Scale> {
     ]
 }
 
-pub fn num_modes(scale: &Scale) -> usize {
-    match scale {
-        Scale::Major => 7, 
-        Scale::MelodicMinor => 7,
-        Scale::HarmonicMajor => 7, 
-        Scale::HarmonicMinor => 7,
-        Scale::DoubleHarmonic => 7,
-        Scale::Diminished => 2,
-        Scale::WholeTone => 1,
-        Scale::Chromatic => 1
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Mode {
     root_note: Note,
@@ -112,7 +119,8 @@ impl Mode {
     pub fn identify(notes: &Vec<Note>) -> Vec<Self> {
         let mut res : Vec<Self> = Vec::new();
         for scale in all_scales().into_iter() {
-            for degree in 0..num_modes(&scale) {
+            let num_modes = get_mode_names( &scale ).len();
+            for degree in 0..num_modes {
                 for note in notes.iter().skip(1) {
                     let mode = Self::new(note.clone(), scale.clone(), degree);
                     if mode.get_notes().iter().zip( notes.iter() ).all(|elt| elt.0 == elt.1) {
@@ -137,7 +145,7 @@ impl Mode {
     pub fn get_notes(&self) -> Vec<Note> {
         let intervals = self.get_intervals(); 
         let mut res = vec![ self.root_note.clone() ];
-        if intervals.len() == 7 {
+        if can_be_optimised(&self.scale) {
             let mut target_note_letter = next_note_letter( &self.root_note.get_letter() );
             for i in 0..intervals.len()-1 {
                 let note = intervals[i].apply( &res[i] );
@@ -235,16 +243,6 @@ impl Mode {
 
 impl fmt::Display for Mode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mode_names : Vec<&str> = match self.scale {
-            Scale::Major => vec!["Major","Dorian","Phrygian","Lydian","Mixolydian","Aeolian","Locrian"],
-            Scale::MelodicMinor => vec!["Melodic Minor","Assyrian","Lydian Augmented","Overtone","Hindu","Half-Diminished","Altered"],
-            Scale::HarmonicMinor => vec!["Harmonic Minor","Locrian #6","Ionian #5","Ukrainian Dorian","Phrygian Dominant","Lydian #2","Super Locrian bb7"],
-            Scale::Diminished => vec!["Diminished","Dominant Diminished","Diminished","Dominant Diminished","Diminished","Dominant Diminished","Diminished","Dominant Diminished"],
-            Scale::WholeTone => std::iter::repeat("Whole Tone").take(6).collect(),
-            Scale::HarmonicMajor => vec!["Harmonic Major","Dorian b5","Phrygian b4","Lydian b3","Mixolydian b2","Lydian Aug #2","Locrian bb7"],
-            Scale::DoubleHarmonic => vec!["Double Harmonic","Lydian #2 #6","UltraPhrygian","Hungarian Minor","Oriental","Ionian Aug #2","Locrian bb3 bb7"],
-            Scale::Chromatic => std::iter::repeat("Chromatic").take(11).collect()
-        };
-        write!(f, "{} {}", self.root_note, mode_names[self.degree])
+        write!(f, "{} {}", self.root_note, get_mode_names(&self.scale)[self.degree])
     }
 }

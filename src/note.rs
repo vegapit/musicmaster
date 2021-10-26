@@ -41,18 +41,6 @@ pub fn next_note_letter(note_letter: &NoteLetter) -> NoteLetter {
     }
 }
 
-pub fn previous_note_letter(note_letter: &NoteLetter) -> NoteLetter {
-    match note_letter {
-        NoteLetter::A => NoteLetter::G,
-        NoteLetter::B => NoteLetter::A,
-        NoteLetter::C => NoteLetter::B,
-        NoteLetter::D => NoteLetter::C,
-        NoteLetter::E => NoteLetter::D,
-        NoteLetter::F => NoteLetter::E,
-        NoteLetter::G => NoteLetter::F
-    }
-}
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum NoteAccidental{
     Natural,
