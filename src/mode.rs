@@ -29,7 +29,7 @@ pub fn get_mode_names(scale: &Scale) -> Vec<&'static str> {
 
 pub fn can_be_optimised(scale: &Scale) -> bool {
     match scale {
-        Scale::Major | Scale::MelodicMinor |  Scale::HarmonicMajor | Scale::HarmonicMinor | Scale::WholeTone => true,
+        Scale::Major | Scale::MelodicMinor |  Scale::HarmonicMajor | Scale::HarmonicMinor => true,
         _ => false
     }
 }
