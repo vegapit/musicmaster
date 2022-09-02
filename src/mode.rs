@@ -185,22 +185,16 @@ impl Mode {
     /// Get the chords of the scale
     pub fn get_chords(&self, extended: bool) -> Vec<Option<Chord>> {
         let notes = self.get_notes();
+        let notes_cycle : Vec<Note> = notes.iter()
+            .cycle()
+            .take(36)
+            .cloned()
+            .collect();
         let mut res = Vec::<Option<Chord>>::new();
         for i in 0..notes.len() {
-            let first_note = notes[i].clone();
-
-            let second_note = if i + 2 < notes.len() {
-                notes[i + 2].clone()
-            } else {
-                notes[i + 2 - notes.len()].clone()
-            };
-
-            let third_note = if i + 4 < notes.len() {
-                notes[i + 4].clone()
-            } else {
-                notes[i + 4 - notes.len()].clone()
-            };
-
+            let first_note = notes_cycle[i].clone();
+            let second_note = notes_cycle[i + 2].clone();
+            let third_note = notes_cycle[i + 4].clone();
             if !extended {
                 let triads = Chord::identify( &vec![first_note, second_note, third_note] );
                 if triads.len() > 0 {
@@ -209,11 +203,7 @@ impl Mode {
                     res.push( None );
                 }
             } else {
-                let fourth_note = if i + 6 < notes.len() {
-                    notes[i + 6].clone()
-                } else {
-                    notes[i + 6 - notes.len()].clone()
-                };
+                let fourth_note = notes_cycle[i + 6].clone();
 
                 let chords = if vec![first_note, second_note, third_note].iter().find(|&&note| note == fourth_note).is_none() {
                     Chord::identify( &vec![first_note, second_note, third_note, fourth_note] )
