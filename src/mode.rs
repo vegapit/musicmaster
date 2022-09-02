@@ -187,7 +187,7 @@ impl Mode {
         let notes = self.get_notes();
         let notes_cycle : Vec<Note> = notes.iter()
             .cycle()
-            .take(36)
+            .take(50)
             .cloned()
             .collect();
         let mut res = Vec::<Option<Chord>>::new();
