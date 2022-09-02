@@ -183,9 +183,9 @@ impl Mode {
     }
 
     /// Get the chords of the scale
-    pub fn get_chords(&self, extended: bool) -> Vec<Chord> {
+    pub fn get_chords(&self, extended: bool) -> Vec<Option<Chord>> {
         let notes = self.get_notes();
-        let mut res = Vec::<Chord>::new();
+        let mut res = Vec::<Option<Chord>>::new();
         for i in 0..notes.len() {
             let first_note = notes[i].clone();
 
@@ -203,7 +203,11 @@ impl Mode {
 
             if !extended {
                 let triads = Chord::identify( &vec![first_note, second_note, third_note] );
-                res.push( triads[0].clone() );
+                if triads.len() > 0 {
+                    res.push( Some(triads[0].clone()) );
+                } else {
+                    res.push( None );
+                }
             } else {
                 let fourth_note = if i + 6 < notes.len() {
                     notes[i + 6].clone()
@@ -216,7 +220,11 @@ impl Mode {
                 } else {
                     Chord::identify( &vec![first_note, second_note, third_note] )
                 };
-                res.push( chords[0].clone() );
+                if chords.len() > 0 {
+                    res.push( Some(chords[0].clone()) );
+                } else {
+                    res.push( None );
+                }
             }
         }
         res

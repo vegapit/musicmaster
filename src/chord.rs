@@ -201,9 +201,10 @@ impl Chord{
             .collect();
         let mut res : Vec<Chord> = Vec::new();
         for note in notes.iter() {
-            let chord = Chord::from_intervals( note.clone(), &intervals ).unwrap();
-            if chord.get_notes().iter().zip( notes.iter() ).all(|elt| elt.0 == elt.1) {
-                res.push( chord );
+            if let Some(chord) = Chord::from_intervals( note.clone(), &intervals ) {
+                if chord.get_notes().iter().zip( notes.iter() ).all(|elt| elt.0 == elt.1) {
+                    res.push( chord );
+                }
             }
         }
         res

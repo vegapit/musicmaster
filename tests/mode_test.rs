@@ -13,7 +13,9 @@ fn scale_from() {
 fn mode_major() {
     let root_note = Note::new( NoteLetter::A, NoteAccidental::Natural);
     let mode = Mode::new(root_note, Scale::Major, 5);
-    let triads = mode.get_chords(true);
+    let triads : Vec<Chord> = mode.get_chords(true).into_iter()
+        .map(|opt| opt.unwrap())
+        .collect();
 
     assert_eq!(triads[0].to_string(), String::from("Am7"));
     assert_eq!(triads[1].to_string(), String::from("Bm7(b5)"));
