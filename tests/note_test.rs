@@ -22,12 +22,16 @@ fn note_string() {
 fn note_previous() {
     assert_eq!(Note::new(NoteLetter::C, NoteAccidental::Natural).previous(), Note::try_from("B").unwrap());
     assert_eq!(Note::new(NoteLetter::G, NoteAccidental::Sharp).previous(), Note::try_from("G").unwrap());
+    assert_eq!(Note::new(NoteLetter::F, NoteAccidental::Natural).previous(), Note::try_from("E").unwrap());
+    assert_eq!(Note::new(NoteLetter::G, NoteAccidental::Flat).previous(), Note::try_from("F").unwrap());
 }
 
 #[test]
 fn note_next() {
     assert_eq!(Note::new(NoteLetter::E, NoteAccidental::Natural).next(), Note::try_from("F").unwrap());
     assert_eq!(Note::new(NoteLetter::G, NoteAccidental::Flat).next(), Note::try_from("G").unwrap());
+    assert_eq!(Note::new(NoteLetter::B, NoteAccidental::Natural).next(), Note::try_from("C").unwrap());
+    assert_eq!(Note::new(NoteLetter::F, NoteAccidental::Sharp).next(), Note::try_from("G").unwrap());
 }
 
 #[test]

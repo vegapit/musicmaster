@@ -1,6 +1,7 @@
 extern crate musicmaster;
 
 use musicmaster::{Note, NoteLetter, NoteAccidental, Scale, Chord, Mode, ChordQuality, ChordPosition};
+use musicmaster::{all_note_letters, all_note_accidentals};
 use std::convert::TryFrom;
 
 #[test]
@@ -13,7 +14,7 @@ fn scale_from() {
 fn mode_major() {
     let root_note = Note::new( NoteLetter::A, NoteAccidental::Natural);
     let mode = Mode::new(root_note, Scale::Major, 5);
-    let triads : Vec<Chord> = mode.get_chords(true).into_iter()
+    let triads : Vec<Chord> = mode.get_chords(true, true).into_iter()
         .map(|opt| opt.unwrap())
         .collect();
 
@@ -39,7 +40,7 @@ fn mode_notes() {
     let root_note = Note::new( NoteLetter::A, NoteAccidental::Natural );
     let phrygian_mode = Mode::new( root_note, Scale::Major, 2 );
     
-    let notes = phrygian_mode.get_notes();   
+    let notes = phrygian_mode.get_notes(true);
     assert_eq!(notes[0].to_string(), String::from("A"));
     assert_eq!(notes[1].to_string(), String::from("Bb"));
     assert_eq!(notes[2].to_string(), String::from("C"));
@@ -68,4 +69,20 @@ fn mode_chord_contain() {
 
     let fminor7 = Chord::new( Note::new( NoteLetter::F, NoteAccidental::Natural), ChordQuality::MinorSeventh, ChordPosition::Root );
     assert_eq!(phrygian_mode.chord_numeral(&fminor7).unwrap(), String::from("IV"));
+}
+
+#[test]
+fn all_major_modes() {
+    for letter in all_note_letters() {
+        for accidental in all_note_accidentals() {
+            for degree in 1..8 {
+                let root_note = Note::new( letter, accidental );
+                let phrygian_mode = Mode::new( root_note, Scale::Major, degree );
+                let intervals = phrygian_mode.get_root_intervals();
+                assert_eq!(intervals.len(), 7);
+                let notes = phrygian_mode.get_notes(false);
+                assert_eq!(notes.len(), 7);
+            }
+        }
+    }
 }

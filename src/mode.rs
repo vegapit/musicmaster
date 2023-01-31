@@ -27,13 +27,6 @@ pub fn get_mode_names(scale: &Scale) -> Vec<&'static str> {
     }
 }
 
-pub fn can_be_optimised(scale: &Scale) -> bool {
-    match scale {
-        Scale::Major | Scale::MelodicMinor |  Scale::HarmonicMajor | Scale::HarmonicMinor => true,
-        _ => false
-    }
-}
-
 impl TryFrom<&str> for Scale {
     type Error = &'static str;
     fn try_from(value: &str) -> Result<Self, Self::Error> {
@@ -109,7 +102,7 @@ impl Mode {
         let intervals : Vec<Interval> = interval_names.iter()
             .cycle()
             .skip( self.degree )
-            .take( interval_names.len() )
+            .take( interval_names.len() - 1 )
             .map(|s| Interval::from_name(s).unwrap() )
             .collect();
         intervals
@@ -123,7 +116,7 @@ impl Mode {
             for degree in 0..num_modes {
                 for note in notes.iter().skip(1) {
                     let mode = Self::new(note.clone(), scale.clone(), degree);
-                    if mode.get_notes().iter().zip( notes.iter() ).all(|elt| elt.0 == elt.1) {
+                    if mode.get_notes(false).iter().zip( notes.iter() ).all(|elt| elt.0 == elt.1) {
                         res.push( mode );
                     }
                 }
@@ -142,12 +135,12 @@ impl Mode {
     }
 
     /// Get the notes of the scale
-    pub fn get_notes(&self) -> Vec<Note> {
+    pub fn get_notes(&self, optimise: bool) -> Vec<Note> {
         let intervals = self.get_intervals(); 
         let mut res = vec![ self.root_note.clone() ];
-        if can_be_optimised(&self.scale) {
+        if optimise {
             let mut target_note_letter = next_note_letter( &self.root_note.get_letter() );
-            for i in 0..intervals.len()-1 {
+            for i in 0..intervals.len() {
                 let note = intervals[i].apply( &res[i] );
                 if target_note_letter == note.get_letter() {
                     res.push( note );
@@ -163,7 +156,7 @@ impl Mode {
                 }
             }
         } else {
-            for i in 0..intervals.len()-1 {
+            for i in 0..intervals.len() {
                 let note = intervals[i].apply( &res[i] );
                 res.push( note );
             }
@@ -183,8 +176,8 @@ impl Mode {
     }
 
     /// Get the chords of the scale
-    pub fn get_chords(&self, extended: bool) -> Vec<Option<Chord>> {
-        let notes = self.get_notes();
+    pub fn get_chords(&self, optimise: bool, extended: bool) -> Vec<Option<Chord>> {
+        let notes = self.get_notes(optimise);
         let notes_cycle : Vec<Note> = notes.iter()
             .cycle()
             .take(50)
@@ -223,13 +216,13 @@ impl Mode {
     /// Checks if Scale contains all Notes provided
     pub fn contains_notes(&self, notes: &Vec<Note>) -> bool {
         notes.iter().all(|elt1| {
-            self.get_notes().iter().any(|elt2| elt2 == elt1)
+            self.get_notes(false).iter().any(|elt2| elt2 == elt1)
         })
     }
 
     /// Get position of note in the mode
     fn get_note_index(&self, note: &Note) -> Option<usize> {
-        let scale_notes = self.get_notes();
+        let scale_notes = self.get_notes(false);
         for elt in scale_notes.iter().enumerate() {
             if elt.1 == note {
                 return Some( elt.0 );
